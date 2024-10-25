@@ -1,0 +1,5 @@
+django
+djangorestframework
+pypdf2
+django-cors-headers
+reportlab

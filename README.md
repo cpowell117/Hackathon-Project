@@ -19,28 +19,39 @@ Backend (Django) Setup
 1. Clone the repository:
 
 Copy the code bellow:
+
+```bash
 git clone https://github.com/yourusername document-summarization-app.git
 cd document-summarization-app/backend
+```
 
 2. Create a virtual environment:
 
-Copy the code bellow:
+```bash
 python3 -m venv venv
 source venv/bin/activate  # On Mac/Linux
-# On Windows, use venv\Scripts\activate
+venv\Scripts\activate.bat #On Windows
+```
 
 3. Install the dependencies:
 
-Copy the code bellow:
+```bash
 pip install django djangorestframework pypdf2 django-cors-headers
+```
+
+or
+
+```bash
+pip install -r requirements.txt
+```
 
 4. Add CORS support:
 
 Add django-cors-headers to your INSTALLED_APPS and set it up in settings.py as follows:
 
-Copy the code bellow:
-# backend/settings.py
+### backend/backend/settings.py
 
+```python
 INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
@@ -56,33 +67,39 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',  # Allow frontend on localhost
 ]
+```
 
 5. Run database migrations (although no database is used in this step, it's required for Django setup):
 
-Copy the code bellow:
+```bash
 python manage.py migrate
+```
 
 6. Run the Django development server:
 
-Copy the code bellow:
-python manage.py runserver
+```bash
+python3 manage.py runserver
+```
 
 The backend will now be running on http://localhost:8000.
 
 Frontend (React) Setup
-1. Navigate to the frontend folder:
+1. Navigate to the frontend folder **:
 
-Copy the code bellow:
-cd ../document-summarizer
+```bash
+cd .\document-summarizer\
+```
 
 2. Install the required NPM dependencies:
 
-Copy the code bellow:
+```bash
 npm install
+```
 
 3. Start the React development server:
 
-Copy the code bellow:
+```bash
 npm start
+```
 
 The frontend will be available at http://localhost:3000.
