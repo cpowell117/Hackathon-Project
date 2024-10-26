@@ -3,3 +3,5 @@ djangorestframework
 pypdf2
 django-cors-headers
 reportlab
+anthropic
+python-dotenv

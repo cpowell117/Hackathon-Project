@@ -8,6 +8,9 @@
 #virtual environment
 /venv
 
+#KEY
+/backend/api/.env
+
 # testing
 /coverage
 
