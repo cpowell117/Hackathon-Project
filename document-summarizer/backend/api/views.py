@@ -58,7 +58,6 @@ class FileUploadView(APIView):
             )
 
     def extract_text_from_pdf(self, pdf_file):
-        """Extract text from PDF file"""
         try:
             reader = PyPDF2.PdfReader(pdf_file)
             text = ''
@@ -69,7 +68,6 @@ class FileUploadView(APIView):
             raise Exception(f"Error extracting PDF text: {str(e)}")
 
     def analyze_with_claude(self, text):
-        """Analyze text using Claude API"""
         try:
             prompt = """
             Please analyze this document and provide:
@@ -103,7 +101,6 @@ class FileUploadView(APIView):
             raise Exception(f"Error analyzing text: {str(e)}")
 
     def generate_pdf(self, analysis):
-        """Generate PDF with analysis results"""
         buffer = BytesIO()
         doc = SimpleDocTemplate(
             buffer,
