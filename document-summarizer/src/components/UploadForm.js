@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { Button, Input, Typography } from '@mui/material';
 import AnalyticsDashboard from './AnalyticsDashboard';
+import './UploadForm.css';
 
 const UploadForm = () => {
   const [file, setFile] = useState(null);
@@ -30,7 +31,6 @@ const UploadForm = () => {
     formData.append('file', file);
 
     try {
-      // Post request to backend
       const response = await axios.post('http://localhost:8000/api/upload/', formData, {
         responseType: 'blob',
         headers: {
@@ -52,33 +52,58 @@ const UploadForm = () => {
   };
 
   return (
-    <div>
-      <Input type="file" accept="application/pdf" onChange={handleFileChange} />
-      {errorMessage && <Typography color="error">{errorMessage}</Typography>}
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={handleFileUpload}
-        disabled={!file}
-        style={{ marginTop: '10px' }}
-      >
-        Upload and Summarize
-      </Button>
+    <div className="upload-form">
+      <Typography variant="h4" gutterBottom style={{ color: '#333', fontWeight: 'bold' }}>
+      Make your Data Smarter
+      </Typography>
+      
+      <div className="button-container">
+        <label htmlFor="file-upload">
+          <Button
+            variant="contained"
+            component="span"
+            color="primary"
+            style={{ fontWeight: 'bold', marginBottom: '10px' }}
+          >
+            Choose File
+          </Button>
+        </label>
+        <Input
+          id="file-upload"
+          type="file"
+          accept="application/pdf"
+          onChange={handleFileChange}
+          style={{ display: 'none' }}
+        />
 
-      {pdfUrl && !errorMessage && (
+        <Button
+          variant="contained"
+          color="secondary"
+          onClick={handleFileUpload}
+          disabled={!file}
+          style={{ fontWeight: 'bold' }}
+        >
+          Upload and Summarize
+        </Button>
+      </div>
+
+      {errorMessage && <Typography color="error" style={{ marginTop: '10px' }}>{errorMessage}</Typography>}
+
+      {pdfUrl && (
         <div style={{ marginTop: '20px' }}>
           <Button
             variant="contained"
-            color="secondary"
+            color="success"
             href={pdfUrl}
             download="summary.pdf"
+            style={{ fontWeight: 'bold' }}
           >
             Download Summary
           </Button>
         </div>
       )}
 
-      {analysisText && <AnalyticsDashboard analysisText={analysisText} />} {/* Render AnalyticsDashboard with the analysis text */}
+      {analysisText && <AnalyticsDashboard analysisText={analysisText} />}
     </div>
   );
 };

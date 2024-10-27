@@ -1,3 +1,4 @@
+import './AnalyticsDashboard.css';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Bar, Radar } from 'react-chartjs-2';
@@ -98,24 +99,27 @@ const AnalyticsDashboard = ({ analysisText }) => {
     console.log("SWOT Data:", swotData);
 
     return (
-        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+        <div className="analytics-container">
             <h1>In-Depth Analytics</h1>
 
             {loading ? (
-                <p>Loading analytics...</p>
+                <p className="loading-text">Loading analytics...</p>
             ) : error ? (
-                <p>No analytics to load</p> 
+                <p className="error-text">Error fetching analytics data. Please try again later.</p>
             ) : analyticsData ? (
                 <div>
-                    <h2>Financial Performance</h2>
-                    <Bar data={financialPerformanceData} options={{ maintainAspectRatio: false }} />
+                    <div className="chart-container">
+                        <h2 className="analytics-section-title">Financial Performance</h2>
+                        <Bar data={financialPerformanceData} options={{ maintainAspectRatio: false }} />
+                    </div>
 
-                    <h2>SWOT Analysis</h2>
-                    <Radar data={swotData} options={{ maintainAspectRatio: false }} />
-
+                    <div className="chart-container">
+                        <h2 className="analytics-section-title">SWOT Analysis</h2>
+                        <Radar data={swotData} options={{ maintainAspectRatio: false }} />
+                    </div>
                 </div>
             ) : (
-                <p>No analytics available</p> 
+                <p className="error-text">No analytics available</p>
             )}
         </div>
     );
