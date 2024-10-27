@@ -1,4 +1,3 @@
-import './AnalyticsDashboard.css';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Bar, Radar } from 'react-chartjs-2';
@@ -15,6 +14,7 @@ import {
     Tooltip,
     Legend
 } from 'chart.js';
+import './AnalyticsDashboard.css';
 
 ChartJS.register(
     CategoryScale,
@@ -31,7 +31,7 @@ ChartJS.register(
 
 const AnalyticsDashboard = ({ analysisText }) => {
     const [analyticsData, setAnalyticsData] = useState(null);
-    const [loading, setLoading] = useState(true);  // To handle loading state
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
 
     const fetchAnalytics = async (text) => {
@@ -49,7 +49,7 @@ const AnalyticsDashboard = ({ analysisText }) => {
     };
 
     useEffect(() => {
-        if (analysisText) {  // FFor fetching analytics only if analysisText is available
+        if (analysisText) {
             fetchAnalytics(analysisText);
         }
     }, [analysisText]);
@@ -95,31 +95,28 @@ const AnalyticsDashboard = ({ analysisText }) => {
         ],
     };
 
-    console.log("Financial Performance Data:", financialPerformanceData);
-    console.log("SWOT Data:", swotData);
-
     return (
-        <div className="analytics-container">
+        <div className="analytics-dashboard">
             <h1>In-Depth Analytics</h1>
 
             {loading ? (
-                <p className="loading-text">Loading analytics...</p>
+                <p>Loading analytics...</p>
             ) : error ? (
-                <p className="error-text">Error fetching analytics data. Please try again later.</p>
+                <p>No analytics to load</p> 
             ) : analyticsData ? (
-                <div>
-                    <div className="chart-container">
-                        <h2 className="analytics-section-title">Financial Performance</h2>
-                        <Bar data={financialPerformanceData} options={{ maintainAspectRatio: false }} />
+                <div className="charts-container">
+                    <div className="chart-box">
+                        <h2>Financial Performance</h2>
+                        <Bar data={financialPerformanceData} options={{ maintainAspectRatio: false }} width={400} height={300} />
                     </div>
 
-                    <div className="chart-container">
-                        <h2 className="analytics-section-title">SWOT Analysis</h2>
-                        <Radar data={swotData} options={{ maintainAspectRatio: false }} />
+                    <div className="chart-box">
+                        <h2>SWOT Analysis</h2>
+                        <Radar data={swotData} options={{ maintainAspectRatio: false }} width={400} height={300} />
                     </div>
                 </div>
             ) : (
-                <p className="error-text">No analytics available</p>
+                <p>No analytics available</p> 
             )}
         </div>
     );
