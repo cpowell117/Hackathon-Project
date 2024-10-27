@@ -10,12 +10,13 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph
 import anthropic
 import os
 from dotenv import load_dotenv
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.styles import getSampleStyleSheet
 
 load_dotenv()
 
 CLAUDE_API_KEY = os.getenv('AT_KEY')
 
+cached_json_data = {}
 
 class FileUploadView(APIView):
     parser_classes = [MultiPartParser]
@@ -27,43 +28,40 @@ class FileUploadView(APIView):
     def post(self, request, *args, **kwargs):
         try:
             print("Received upload request")
-        
-            # Check if file is present in request
+
             file = request.FILES.get('file')
             if not file:
                 print("No file provided in request")
                 return Response(
-                    {'error': 'No file provided'}, 
+                    {'error': 'No file provided'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
             print("File received:", file.name)
-        
-            # Check file type
+
             if file.content_type == 'application/pdf':
                 text = self.extract_text_from_pdf(file)
             else:
                 text = file.read().decode('utf-8')
 
-            print("Extracted text:", text[:100])  # Print first 100 characters of text for debugging
+            print("Extracted text:", text[:100]) 
 
-            # Analyze text with Claude API
             analysis = self.analyze_with_claude(text)
 
-            # Generate PDF from analysis
-            pdf_buffer = self.generate_pdf(analysis)
+            cached_json_data['json'] = analysis['analytics_data']
 
-            # Prepare response with PDF download
+            pdf_buffer = self.generate_pdf(analysis['analysis_text'])
+
             response = HttpResponse(pdf_buffer, content_type='application/pdf')
             response['Content-Disposition'] = 'attachment; filename="analysis.pdf"'
-        
+
             print("PDF generation successful")
             return response
 
         except Exception as e:
             print("Error during file upload handling:", e)
             return Response(
-                {'error': str(e)}, 
+                {'error': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
@@ -98,14 +96,12 @@ class FileUploadView(APIView):
                 max_tokens=4000,
                 temperature=0.5
             )
-
-            # Print the response text from Claude for debugging
             print("Claude Response Text:", response.content[0].text)
 
-            # Parse JSON section from Claude's response for chart data
             analysis_text = response.content[0].text
             analytics_data = self.parse_claude_json(analysis_text)
-            return {"analysis_text": analysis_text, "analytics_data": analytics_data}
+
+            return {"analysis_text": self.clean_analysis_text(analysis_text), "analytics_data": analytics_data}
 
         except anthropic.RateLimitError:
             raise Exception("Rate limit exceeded. Please try again later.")
@@ -113,65 +109,61 @@ class FileUploadView(APIView):
             raise Exception(f"Claude API error: {str(e)}")
         except Exception as e:
             raise Exception(f"Error analyzing text: {str(e)}")
-        
+
     def parse_claude_json(self, response_text):
         import json
         try:
-            # Attempt to extract JSON structure from Claude's response
-            start_index = response_text.find("{")
-            end_index = response_text.rfind("}") + 1
-            json_data = response_text[start_index:end_index]
+            # Here is a basic and hardcoded filter method to obtain the JSON
+            start_index = response_text.find("```json")
+            end_index = response_text.find("```", start_index + 7)
+
+            if start_index == -1 or end_index == -1:
+                raise Exception("No JSON data found between the expected markers")
+
+            json_data = response_text[start_index + 7:end_index].strip()
+
             return json.loads(json_data)
-        except json.JSONDecodeError:
-            raise Exception("Failed to parse JSON data from Claude's response.")
+            
+        except json.JSONDecodeError as e:
+            raise Exception(f"Failed to parse JSON data: {str(e)}")
+        except Exception as e:
+            raise Exception(f"Error extracting JSON from response: {str(e)}")
 
-    def get_in_depth_analytics(self, analysis_text):
-        # Mock structured analytics data here
-        analytics_data = {
-            "financial_performance": {
-                "revenue": 10000,
-                "profit": 2000,
-                "growth_rate": 5.0
-            },
-            "business_segment_breakdown": [
-                {"segment": "Gaming", "value": 5000},
-                {"segment": "Data Center", "value": 3000},
-                {"segment": "Professional Visualization", "value": 2000}
-            ],
-            "strategic_initiative_impact": [
-                {"initiative": "AI Development", "impact": "High"},
-                {"initiative": "Sustainable Tech", "impact": "Medium"}
-            ],
-            "swot_analysis": {
-                "strengths": ["Strong brand", "High R&D investment"],
-                "weaknesses": ["High operational costs"],
-                "opportunities": ["Growing AI market"],
-                "threats": ["Competitive market"]
-            },
-            "conclusion_recommendations": "Continue focusing on AI and sustainable technology."
-        }
-        return analytics_data
+    def clean_analysis_text(self, analysis_text):
+        cleaned_text = analysis_text.split("5. Quantitative Data (JSON format)")[0].strip()
+        
+        cleaned_text = cleaned_text.replace("```json", "").replace("```", "").strip()
 
-    def generate_pdf(self, analysis):
+        return cleaned_text
+
+    def generate_pdf(self, analysis_text):
         buffer = BytesIO()
         doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=72)
         styles = getSampleStyleSheet()
         content = [Paragraph("Document Analysis Report", styles['Heading1']), Paragraph("<br/><br/>", styles['Normal'])]
-        
-        for line in analysis.split('\n'):
+
+        for line in analysis_text.split('\n'):
             if line.strip().upper() == line.strip():
                 content.append(Paragraph(line.strip(), styles['Heading2']))
             else:
                 content.append(Paragraph(line.strip(), styles['Normal']))
-        
+
         doc.build(content)
         buffer.seek(0)
         return buffer
 
+    def get_in_depth_analytics(self):
+        if 'json' not in cached_json_data:
+            raise Exception("No cached analytics data available.")
+        return cached_json_data['json']
+
 
 class InDepthAnalyticsView(APIView):
     def post(self, request):
-        text = request.data.get("text", "")
-        file_upload_view = FileUploadView()
-        analytics_data = file_upload_view.get_in_depth_analytics(text)
-        return Response(analytics_data, status=status.HTTP_200_OK)
+        try:
+            file_upload_view = FileUploadView()
+            # Ths is for getting cached analytics from the last analysis in order to botain the JSON
+            analytics_data = file_upload_view.get_in_depth_analytics()
+            return Response(analytics_data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

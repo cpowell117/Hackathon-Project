@@ -3,5 +3,5 @@ from .views import FileUploadView, InDepthAnalyticsView
 
 urlpatterns = [
     path('upload/', FileUploadView.as_view(), name='file-upload'),
-    path('in-depth-analytics/', InDepthAnalyticsView.as_view(), name='in-depth-analytics')
+    path('in-depth-analytics/', InDepthAnalyticsView.as_view(), name='in-depth-analytics'),
 ]

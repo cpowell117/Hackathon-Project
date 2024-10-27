@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Button, Input, Typography } from '@mui/material';
+import AnalyticsDashboard from './AnalyticsDashboard';
 
 const UploadForm = () => {
   const [file, setFile] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [pdfUrl, setPdfUrl] = useState(null);
+  const [analysisText, setAnalysisText] = useState('');
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -13,11 +15,13 @@ const UploadForm = () => {
     if (selectedFile && selectedFile.type === 'application/pdf') {
       setFile(selectedFile);
       setErrorMessage('');
-      setPdfUrl(null); // Clear previous PDF URL on new file selection
+      setPdfUrl(null);
+      setAnalysisText('');
     } else {
       setFile(null);
       setErrorMessage('Please select a valid PDF file.');
-      setPdfUrl(null); // Clear previous PDF URL if an invalid file is selected
+      setPdfUrl(null);
+      setAnalysisText('');
     }
   };
 
@@ -36,7 +40,11 @@ const UploadForm = () => {
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       setPdfUrl(url);
-      setErrorMessage(''); // Clear error message on successful upload
+      setErrorMessage('');
+
+      const analysisResponse = await axios.post('http://localhost:8000/api/in-depth-analytics/', { text: 'Sample text for analysis' });
+      setAnalysisText(analysisResponse.data);
+
     } catch (error) {
       console.error('File upload failed:', error);
       setErrorMessage('File upload failed. Please try again.');
@@ -69,6 +77,8 @@ const UploadForm = () => {
           </Button>
         </div>
       )}
+
+      {analysisText && <AnalyticsDashboard analysisText={analysisText} />} {/* Render AnalyticsDashboard with the analysis text */}
     </div>
   );
 };

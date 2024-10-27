@@ -1,32 +1,78 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Bar, Pie, Radar } from 'react-chartjs-2';
+import { Bar, Radar } from 'react-chartjs-2';
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    RadialLinearScale,
+    BarElement,
+    PointElement,
+    LineElement,
+    ArcElement,
+    Title,
+    Tooltip,
+    Legend
+} from 'chart.js';
 
-const AnalyticsDashboard = () => {
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    RadialLinearScale,
+    BarElement,
+    PointElement,
+    LineElement,
+    ArcElement,
+    Title,
+    Tooltip,
+    Legend
+);
+
+const AnalyticsDashboard = ({ analysisText }) => {
     const [analyticsData, setAnalyticsData] = useState(null);
+    const [loading, setLoading] = useState(true);  // To handle loading state
+    const [error, setError] = useState(false);
 
     const fetchAnalytics = async (text) => {
         try {
+            setLoading(true); 
             const response = await axios.post("http://localhost:8000/api/in-depth-analytics/", { text });
-            setAnalyticsData(response.data.analytics_data);
+            setAnalyticsData(response.data);
+            setError(false);
         } catch (error) {
             console.error("Error fetching analytics:", error);
+            setError(true); 
+        } finally {
+            setLoading(false); 
         }
     };
 
     useEffect(() => {
-        const sampleText = "2023 NVIDIA Corporation Annual Review";  // replace with actual text or user input
-        fetchAnalytics(sampleText);
-    }, []);
+        if (analysisText) {  // FFor fetching analytics only if analysisText is available
+            fetchAnalytics(analysisText);
+        }
+    }, [analysisText]);
 
-    // Example chart configurations (based on assumed structure from Claude's response)
     const financialPerformanceData = {
-        labels: ['Revenue', 'Profit', 'Growth Rate'],
+        labels: [
+            'Timely Payments (Contributory)', 
+            'Timely Payments (Reimbursable)', 
+            'Receivables Turnover (Contributory)', 
+            'Receivables Turnover (Reimbursable)', 
+            'Uncollectible Rate (Contributory)', 
+            'Uncollectible Rate (Reimbursable)'
+        ],
         datasets: [
             {
                 label: 'Financial Performance',
-                data: analyticsData?.financial_performance ? 
-                      [analyticsData.financial_performance.revenue, analyticsData.financial_performance.profit, analyticsData.financial_performance.growth_rate] : [],
+                data: [
+                    analyticsData?.financial_performance?.timely_payments?.contributory ?? 0, 
+                    analyticsData?.financial_performance?.timely_payments?.reimbursable ?? 0, 
+                    analyticsData?.financial_performance?.receivables_turnover?.contributory ?? 0, 
+                    analyticsData?.financial_performance?.receivables_turnover?.reimbursable ?? 0,
+                    analyticsData?.financial_performance?.uncollectible_rate?.contributory ?? 0,
+                    analyticsData?.financial_performance?.uncollectible_rate?.reimbursable ?? 0
+                ],
                 backgroundColor: 'rgba(75, 192, 192, 0.6)',
             },
         ],
@@ -37,18 +83,29 @@ const AnalyticsDashboard = () => {
         datasets: [
             {
                 label: 'SWOT Analysis',
-                data: analyticsData?.swot_analysis ? 
-                      [analyticsData.swot_analysis.strengths.length, analyticsData.swot_analysis.weaknesses.length, analyticsData.swot_analysis.opportunities.length, analyticsData.swot_analysis.threats.length] : [],
+                data: [
+                    analyticsData?.swot_analysis?.strengths?.length ?? 0, 
+                    analyticsData?.swot_analysis?.weaknesses?.length ?? 0, 
+                    analyticsData?.swot_analysis?.opportunities?.length ?? 0, 
+                    analyticsData?.swot_analysis?.threats?.length ?? 0
+                ],
                 backgroundColor: ['rgba(75, 192, 192, 0.6)', 'rgba(255, 99, 132, 0.6)', 'rgba(54, 162, 235, 0.6)', 'rgba(255, 206, 86, 0.6)'],
             },
         ],
     };
 
+    console.log("Financial Performance Data:", financialPerformanceData);
+    console.log("SWOT Data:", swotData);
+
     return (
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h1>In-Depth Analytics</h1>
 
-            {analyticsData ? (
+            {loading ? (
+                <p>Loading analytics...</p>
+            ) : error ? (
+                <p>No analytics to load</p> 
+            ) : analyticsData ? (
                 <div>
                     <h2>Financial Performance</h2>
                     <Bar data={financialPerformanceData} options={{ maintainAspectRatio: false }} />
@@ -56,10 +113,9 @@ const AnalyticsDashboard = () => {
                     <h2>SWOT Analysis</h2>
                     <Radar data={swotData} options={{ maintainAspectRatio: false }} />
 
-                    {/* Add other charts as necessary */}
                 </div>
             ) : (
-                <p>Loading analytics...</p>
+                <p>No analytics available</p> 
             )}
         </div>
     );
