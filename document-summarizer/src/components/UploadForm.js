@@ -13,9 +13,11 @@ const UploadForm = () => {
     if (selectedFile && selectedFile.type === 'application/pdf') {
       setFile(selectedFile);
       setErrorMessage('');
+      setPdfUrl(null); // Clear previous PDF URL on new file selection
     } else {
       setFile(null);
       setErrorMessage('Please select a valid PDF file.');
+      setPdfUrl(null); // Clear previous PDF URL if an invalid file is selected
     }
   };
 
@@ -34,8 +36,10 @@ const UploadForm = () => {
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       setPdfUrl(url);
+      setErrorMessage(''); // Clear error message on successful upload
     } catch (error) {
       console.error('File upload failed:', error);
+      setErrorMessage('File upload failed. Please try again.');
     }
   };
 
@@ -48,12 +52,13 @@ const UploadForm = () => {
         color="primary"
         onClick={handleFileUpload}
         disabled={!file}
+        style={{ marginTop: '10px' }}
       >
         Upload and Summarize
       </Button>
 
-      {pdfUrl && (
-        <div>
+      {pdfUrl && !errorMessage && (
+        <div style={{ marginTop: '20px' }}>
           <Button
             variant="contained"
             color="secondary"

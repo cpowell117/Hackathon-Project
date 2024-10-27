@@ -2,19 +2,15 @@
 
 import React from 'react';
 import UploadForm from './components/UploadForm';
-import DataVisualization from './components/DataVisualization';
+import AnalyticsDashboard from './components/AnalyticsDashboard';
+import './App.css';
 
 function App() {
-  const data = [
-    { name: 'Income', value: 4000 },
-    { name: 'Expenses', value: 2400 },
-  ];
-
   return (
     <div className="App">
       <h1>Document Summarization and Compliance Reports</h1>
       <UploadForm />
-      <DataVisualization data={data} />
+      <AnalyticsDashboard />
     </div>
   );
 }
